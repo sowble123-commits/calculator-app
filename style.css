@@ -1,0 +1,636 @@
+/* app/style.css */
+:root {
+  --lcd-bg: #61a5b8;
+  --lcd-dark-bg: #4f8e9f;
+  --lcd-text: #0e222a;
+  --body-bg: #d2d6dc;
+  --body-metal-grad: linear-gradient(180deg, #e4e7eb 0%, #cbd0d6 50%, #bec4cb 100%);
+
+  /* 단추 색상 */
+  --btn-mem-bg: linear-gradient(180deg, #627083 0%, #4d5b6d 100%);
+  --btn-mem-text: #ffffff;
+
+  --btn-clear-bg: linear-gradient(180deg, #e07971 0%, #cc5f56 100%);
+  --btn-clear-text: #111111;
+
+  --btn-func-bg: linear-gradient(180deg, #bcc6d1 0%, #a4b0bd 100%);
+  --btn-func-text: #111111;
+
+  --btn-num-bg: linear-gradient(180deg, #cbcdc4 0%, #b8bab0 100%);
+  --btn-num-text: #111111;
+
+  --btn-equals-bg: linear-gradient(180deg, #f0853f 0%, #dc6e26 100%);
+  --btn-equals-text: #111111;
+
+  --btn-shadow: 0 3px 3px rgba(0, 0, 0, 0.22);
+  --btn-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.65), inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+  --btn-active-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+
+  --history-action-bg: #4a5057;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+  background-color: #bec4cb;
+}
+
+/* 앱 전체 컨테이너: 100dvh 및 세로 꽉 채움 */
+.calculator-app {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  height: 100dvh;
+  margin: 0 auto;
+  background: var(--body-metal-grad);
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)) 12px;
+  overflow: hidden;
+}
+
+/* 저장소 경고 바 */
+.storage-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+  font-size: 11px;
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+
+/* 디스플레이 영역: 캡처 1 LCD 스타일 */
+.display-container {
+  position: relative;
+  width: 100%;
+  /* 세로 화면에서 디스플레이 비율 */
+  height: 23%;
+  min-height: 120px;
+  background: linear-gradient(180deg, #67abc0 0%, #5ba0b3 60%, #5296a8 100%);
+  border: 2px solid #3d6a77;
+  border-radius: 8px;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.28), 0 2px 4px rgba(255, 255, 255, 0.6);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* 메모리 M 배지 */
+.memory-indicator {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--lcd-text);
+  letter-spacing: -0.5px;
+}
+
+/* 메인 결과 숫자 줄 */
+.result-line-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  width: 100%;
+}
+
+.result-line {
+  color: var(--lcd-text);
+  font-size: clamp(2rem, 11vw, 3.6rem);
+  font-weight: 300;
+  letter-spacing: -1px;
+  text-align: right;
+  white-space: nowrap;
+  line-height: 1.1;
+  transition: font-size 0.1s ease;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.result-line.long-text {
+  font-size: clamp(1.4rem, 7vw, 2.2rem);
+}
+
+.result-line.very-long-text {
+  font-size: clamp(1.1rem, 5.2vw, 1.6rem);
+}
+
+.result-line.error-text {
+  font-size: clamp(1.1rem, 5.5vw, 1.8rem);
+  color: #7f1d1d;
+  font-weight: 500;
+}
+
+/* 디스플레이 하단 정보 줄 */
+.display-bottom-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 32px;
+  border-top: 1px solid rgba(61, 106, 119, 0.35);
+  padding-top: 4px;
+}
+
+/* 계산 기록 단추 */
+.history-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--lcd-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 30px;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.15s, background-color 0.15s;
+  z-index: 2;
+}
+
+.history-toggle-btn:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+.history-toggle-btn:active {
+  background-color: rgba(0, 0, 0, 0.12);
+}
+
+/* 가운데 끌어내림 손잡이 바: 식 길이와 무관하게 항상 중앙 고정 */
+.drag-handle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 4px;
+  background-color: rgba(14, 34, 42, 0.4);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* 작은 직전 식 */
+.sub-expression {
+  font-size: clamp(1rem, 4.2vw, 1.4rem);
+  color: rgba(14, 34, 42, 0.75);
+  font-weight: 400;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: calc(50% - 32px);
+  margin-left: auto;
+  z-index: 1;
+}
+
+/* 단추 그리드 컨테이너 (4열 6행) */
+.keypad-container {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+/* 공통 단추 스타일 */
+.calc-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  box-shadow: var(--btn-shadow), var(--btn-highlight);
+  cursor: pointer;
+  outline: none;
+  touch-action: manipulation;
+  transition: transform 0.05s ease, box-shadow 0.05s ease;
+}
+
+.calc-btn:active {
+  transform: translateY(2px);
+  box-shadow: var(--btn-active-shadow);
+}
+
+/* 단추별 세부 스타일 */
+.btn-mem {
+  background: var(--btn-mem-bg);
+  color: var(--btn-mem-text);
+  font-size: clamp(1.1rem, 4.8vw, 1.5rem);
+  font-weight: 500;
+  letter-spacing: -0.5px;
+}
+
+.btn-clear {
+  background: var(--btn-clear-bg);
+  color: var(--btn-clear-text);
+  font-size: clamp(1.6rem, 7vw, 2.3rem);
+  font-weight: 400;
+}
+
+.btn-func, .btn-op {
+  background: var(--btn-func-bg);
+  color: var(--btn-func-text);
+  font-size: clamp(1.5rem, 6.5vw, 2.1rem);
+  font-weight: 400;
+}
+
+.btn-num {
+  background: var(--btn-num-bg);
+  color: var(--btn-num-text);
+  /* 숫자 글씨는 단추 높이의 절반쯤으로 시원하게 크게 */
+  font-size: clamp(1.9rem, 8.5vw, 2.8rem);
+  font-weight: 300;
+}
+
+.btn-backspace {
+  background: var(--btn-num-bg);
+  color: var(--btn-num-text);
+}
+
+.btn-equals {
+  background: var(--btn-equals-bg);
+  color: var(--btn-equals-text);
+  font-size: clamp(1.9rem, 8.5vw, 2.8rem);
+  font-weight: 400;
+}
+
+/* 계산 기록 슬라이드 패널: 캡처 2 스타일 */
+.history-panel {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  right: 12px;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, #67abc0 0%, #5ea3b6 100%);
+  border: 2px solid #3d6a77;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  transform: translateY(-110%);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.history-panel.open {
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.history-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 기록 헤더: 현재 숫자 표시 (캡처 2 상단 숫자 유지) */
+.history-header-display {
+  padding: 8px 12px;
+  border-bottom: 2px solid rgba(61, 106, 119, 0.4);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.history-current-val {
+  color: var(--lcd-text);
+  font-size: clamp(2rem, 10vw, 3.2rem);
+  font-weight: 300;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 기록 카드 목록 */
+.history-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 기록 카드 아이템 */
+.history-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(61, 106, 119, 0.45);
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.history-card:active {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.card-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.card-date {
+  font-size: 13px;
+  color: rgba(14, 34, 42, 0.8);
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.card-note-icon {
+  color: rgba(14, 34, 42, 0.7);
+  display: flex;
+  align-items: center;
+}
+
+.card-more-btn {
+  background: none;
+  border: none;
+  color: var(--lcd-text);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-more-btn:active {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.card-note-text {
+  font-size: 13px;
+  color: #1a4250;
+  background: rgba(255, 255, 255, 0.35);
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  word-break: break-all;
+}
+
+.card-expr {
+  text-align: right;
+  font-size: clamp(1.2rem, 5vw, 1.6rem);
+  color: rgba(14, 34, 42, 0.85);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-divider {
+  border: none;
+  border-top: 1px solid rgba(61, 106, 119, 0.5);
+  margin: 4px 0 6px auto;
+  width: 60%;
+}
+
+.card-result {
+  text-align: right;
+  font-size: clamp(1.4rem, 6vw, 1.9rem);
+  font-weight: 400;
+  color: var(--lcd-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 빈 기록 화면 */
+.history-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(14, 34, 42, 0.7);
+  font-size: 16px;
+}
+
+/* 기록 패널 하단 바 (내역 지우기 / 닫기) */
+.history-action-bar {
+  display: flex;
+  height: 52px;
+  background-color: var(--history-action-bg);
+  border-top: 1px solid rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.history-bar-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s;
+}
+
+.history-bar-btn:first-child {
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.history-bar-btn:active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.history-bar-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 더보기 팝업 메뉴 */
+.more-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+}
+
+.more-menu-popup {
+  position: fixed;
+  z-index: 100;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  padding: 4px 0;
+  min-width: 110px;
+}
+
+.more-menu-item {
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 14px;
+  color: #1f2937;
+  cursor: pointer;
+}
+
+.more-menu-item:hover, .more-menu-item:active {
+  background-color: #f3f4f6;
+}
+
+/* 모달 창 공통 */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+
+.modal-dialog {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 320px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  animation: modalPop 0.15s ease-out;
+}
+
+@keyframes modalPop {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modal-title {
+  padding: 16px 18px 8px 18px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.modal-body {
+  padding: 12px 18px;
+}
+
+.modal-body.confirm-text {
+  padding: 24px 18px 16px 18px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: #374151;
+  text-align: center;
+}
+
+.modal-body textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+}
+
+.modal-body textarea:focus {
+  border-color: #2563eb;
+}
+
+.char-count {
+  text-align: right;
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.modal-footer {
+  display: flex;
+  border-top: 1px solid #e5e7eb;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 13px;
+  background: none;
+  border: none;
+  font-size: 15px;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.modal-btn:first-child {
+  border-right: 1px solid #e5e7eb;
+}
+
+.modal-btn.primary {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.modal-btn.danger {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.modal-btn:active {
+  background-color: #f9fafb;
+}
+
+/* 토스트 메시지 */
+.toast-container {
+  position: absolute;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(28, 36, 48, 0.95);
+  color: #ffffff;
+  padding: 10px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  z-index: 300;
+  white-space: nowrap;
+}
+
+.toast-action {
+  background: none;
+  border: none;
+  color: #60a5fa;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 4px;
+}
