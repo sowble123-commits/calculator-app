@@ -29,7 +29,12 @@
         <div class="result-line" id="resultDisplay" title="길게 눌러 복사">0</div>
       </div>
 
-      <!-- 디스플레이 하단 정보 줄 (기록 아이콘, 손잡이, 보조 식) -->
+      <!-- 작은 줄 (미리 결과 또는 직전 식) -->
+      <div class="sub-expression-wrap">
+        <div class="sub-expression" id="exprDisplay"></div>
+      </div>
+
+      <!-- 디스플레이 하단 정보 줄 (기록 아이콘, 손잡이) -->
       <div class="display-bottom-bar">
         <button type="button" class="history-toggle-btn" id="historyBtn" aria-label="계산 기록" title="계산 기록">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -39,7 +44,6 @@
           </svg>
         </button>
         <div class="drag-handle" id="dragHandle" aria-hidden="true"></div>
-        <div class="sub-expression" id="exprDisplay"></div>
       </div>
     </div>
 

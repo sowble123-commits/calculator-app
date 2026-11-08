@@ -64,47 +64,137 @@ function triggerVibrate(ms = 10) {
   } catch (_) {}
 }
 
-// 3. 디스플레이 화면 업데이트
-let currentExpression = '';
+// 3. 디스플레이 화면 업데이트 및 글자 크기 자동 조절
+let lastState = null;
+let isResultState = false;
+let currentSmallText = '';
+let currentIsPreview = false;
 
-function updateExpressionDisplay() {
-  if (!currentExpression) {
+function fitResultDisplay(text, isError = false) {
+  resultDisplay.textContent = text;
+
+  if (isError) {
+    resultDisplay.classList.add('error-text');
+  } else {
+    resultDisplay.classList.remove('error-text');
+  }
+
+  const wrap = resultDisplay.parentElement;
+  const availableWidth = wrap.clientWidth;
+  const containerHeight = displayArea.clientHeight;
+
+  // 기본 크기는 결과 칸 높이의 절반쯤 (360×780 기준 containerHeight 약 156px, 절반 약 75px. 기존 40px의 1.8배 이상)
+  const maxFontSize = isError
+    ? Math.min(36, Math.floor(containerHeight * 0.28))
+    : Math.min(76, Math.max(56, Math.floor(containerHeight * 0.48)));
+
+  const minFontSize = isError ? 18 : 22;
+
+  // 이진 탐색으로 렌더링된 너비가 가용 너비 안에 들어오는 최대 폰트 크기 계산
+  let low = minFontSize;
+  let high = maxFontSize;
+  let bestFit = minFontSize;
+
+  while (low <= high) {
+    let mid = Math.floor((low + high) / 2);
+    resultDisplay.style.fontSize = mid + 'px';
+    if (resultDisplay.scrollWidth <= availableWidth) {
+      bestFit = mid;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  resultDisplay.style.fontSize = bestFit + 'px';
+
+  // 가장 작은 크기에서도 넘치면 앞을 '…'로 줄이고 뒷부분이 보인다
+  if (resultDisplay.scrollWidth > availableWidth) {
+    resultDisplay.style.fontSize = minFontSize + 'px';
+    let truncated = text;
+    while (truncated.length > 2 && resultDisplay.scrollWidth > availableWidth) {
+      truncated = truncated.slice(1);
+      resultDisplay.textContent = '…' + truncated.trimStart();
+    }
+  }
+}
+
+function updateSmallLine(text, isPreview = false) {
+  currentSmallText = text || '';
+  currentIsPreview = isPreview;
+
+  if (!currentSmallText) {
     exprDisplay.textContent = '';
     return;
   }
-  exprDisplay.textContent = currentExpression;
-  // 식이 칸에 다 안 들어가면 최근에 친 뒷부분이 보이고 앞쪽이 …로 줄어든다
-  if (exprDisplay.scrollWidth > exprDisplay.clientWidth) {
-    let truncated = currentExpression;
-    while (truncated.length > 2 && exprDisplay.scrollWidth > exprDisplay.clientWidth) {
+
+  if (isPreview) {
+    exprDisplay.classList.add('preview-text');
+  } else {
+    exprDisplay.classList.remove('preview-text');
+  }
+
+  exprDisplay.textContent = currentSmallText;
+  const wrap = exprDisplay.parentElement;
+  const availableWidth = wrap.clientWidth;
+
+  if (exprDisplay.scrollWidth > availableWidth) {
+    let truncated = currentSmallText;
+    while (truncated.length > 2 && exprDisplay.scrollWidth > availableWidth) {
       truncated = truncated.slice(1);
       exprDisplay.textContent = '…' + truncated.trimStart();
     }
   }
 }
 
-window.addEventListener('resize', updateExpressionDisplay);
+function getCurrentEvaluatedValue(withoutCommas = false) {
+  if (!lastState) return withoutCommas ? '0' : '0';
+  if (lastState.error) return lastState.error;
+
+  let val;
+  if (isResultState) {
+    val = lastState.display;
+  } else if (lastState.preview) {
+    val = lastState.preview;
+  } else {
+    val = lastState.display;
+  }
+
+  return withoutCommas ? val.replace(/,/g, '') : val;
+}
 
 function updateDisplay(state) {
-  const text = state.display;
-  resultDisplay.textContent = text;
-  historyHeaderVal.textContent = text;
+  lastState = state;
+  const isErr = !!state.error;
 
-  currentExpression = state.expression;
-  updateExpressionDisplay();
-
-  // 글자 수에 따른 폰트 크기 자동 조절
-  resultDisplay.classList.remove('long-text', 'very-long-text', 'error-text');
-  if (state.error) {
-    resultDisplay.classList.add('error-text');
-  } else if (text.length > 13) {
-    resultDisplay.classList.add('very-long-text');
-  } else if (text.length > 9) {
-    resultDisplay.classList.add('long-text');
+  if (isErr) {
+    isResultState = false;
+    // 오류: 큰 줄에 오류 글, 작은 줄에 그 식
+    fitResultDisplay(state.error, true);
+    updateSmallLine(state.expression, false);
+  } else if (isResultState) {
+    // = (또는 % 확정) 뒤: 큰 줄 = 결과, 작은 줄 = 식과 = (50 × 50 =)
+    fitResultDisplay(state.display, false);
+    let exprText = state.expression;
+    if (exprText && !exprText.endsWith('=')) {
+      exprText += ' =';
+    }
+    updateSmallLine(exprText, false);
+  } else {
+    // 치는 중: 큰 줄 = liveExpression. 작은 줄 = preview가 있으면 = 2,500(흐린 글씨), 없으면 빈칸
+    fitResultDisplay(state.liveExpression || state.display, false);
+    if (state.preview) {
+      updateSmallLine(`= ${state.preview}`, true);
+    } else {
+      updateSmallLine('', false);
+    }
   }
 
   // 메모리 인디케이터
   memoryIndicator.style.display = state.hasMemory ? 'block' : 'none';
+
+  // 기록 펼침 맨 위 숫자: 큰 줄 글이 아니라 같은 규칙의 값
+  historyHeaderVal.textContent = getCurrentEvaluatedValue(false);
 
   // 새 기록 생성 시 자동 저장
   if (state.record) {
@@ -113,6 +203,33 @@ function updateDisplay(state) {
       renderHistoryList();
     }
   }
+}
+
+function handleResize() {
+  if (lastState) {
+    updateDisplay(lastState);
+  }
+}
+window.addEventListener('resize', handleResize);
+
+function handleInputKey(key) {
+  if (key === '=' || key === 'Enter' || key === '%') {
+    isResultState = true;
+  } else if (key === 'C' || key === 'c') {
+    isResultState = false;
+  } else if (isResultState) {
+    if (key === '+/-' || key === '±') {
+      // 결과 상태 유지
+    } else {
+      isResultState = false;
+    }
+  }
+
+  const state = calc.press(key);
+  if (state.error) {
+    isResultState = false;
+  }
+  return state;
 }
 
 // 4. 키패드 단추 클릭 이벤트
@@ -124,7 +241,7 @@ keypad.addEventListener('click', (e) => {
   if (!key) return;
 
   triggerVibrate(10);
-  const state = calc.press(key);
+  const state = handleInputKey(key);
 
   if (state.ignored) {
     // 15자리 초과 등으로 무시된 경우 짧게 진동
@@ -156,12 +273,12 @@ window.addEventListener('keydown', (e) => {
   if (mappedKey) {
     e.preventDefault();
     triggerVibrate(10);
-    const state = calc.press(mappedKey);
+    const state = handleInputKey(mappedKey);
     updateDisplay(state);
   }
 });
 
-// 6. 결과 숫자 길게 누르기 (0.5초 복사)
+// 6. 결과 숫자 길게 누르기 (0.5초 복사: = 뒤면 결과, 치는 중이면 미리 결과가 있을 때 그 값, 없으면 지금 치던 숫자 쉼표 없이)
 let longPressTimer = null;
 let longPressTriggered = false;
 
@@ -170,7 +287,7 @@ function startLongPress() {
   longPressTimer = setTimeout(() => {
     longPressTriggered = true;
     triggerVibrate(20);
-    const rawVal = resultDisplay.textContent.replace(/,/g, '');
+    const rawVal = getCurrentEvaluatedValue(true);
     copyToClipboard(rawVal);
   }, 500);
 }
@@ -261,7 +378,7 @@ function openHistoryPanel() {
   if (isHistoryOpen) return;
   isHistoryOpen = true;
   historyPanel.classList.add('open');
-  historyHeaderVal.textContent = resultDisplay.textContent;
+  historyHeaderVal.textContent = getCurrentEvaluatedValue(false);
   renderHistoryList();
 
   // 브라우저 뒤로 가기 연동
@@ -362,6 +479,7 @@ function renderHistoryList() {
     card.addEventListener('click', (e) => {
       if (e.target.closest('.card-more-btn')) return;
       const raw = card.dataset.raw;
+      isResultState = true;
       const state = calc.load(raw);
       updateDisplay(state);
       closeHistoryPanel();
@@ -497,6 +615,10 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// 초기 디스플레이 설정
+const initialState = calc.press('');
+updateDisplay(initialState);
+
 // 검수 및 테스트 편의를 위한 내부 API 노출
 window.__calc = {
   calc,
@@ -505,6 +627,10 @@ window.__calc = {
   closeHistoryPanel,
   renderHistoryList,
   openNoteModal,
-  updateDisplay
+  updateDisplay,
+  fitResultDisplay,
+  handleInputKey,
+  getState: () => lastState,
+  getIsResult: () => isResultState
 };
 

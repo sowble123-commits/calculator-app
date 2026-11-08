@@ -1,5 +1,5 @@
 // app/sw.js
-const CACHE_NAME = 'calc-cache-v3';
+const CACHE_NAME = 'calc-cache-v4';
 
 const ASSETS_TO_CACHE = [
   './',

@@ -76,14 +76,14 @@ html, body {
 .display-container {
   position: relative;
   width: 100%;
-  /* 세로 화면에서 디스플레이 비율 */
-  height: 23%;
-  min-height: 120px;
+  /* 세로 화면에서 디스플레이 비율: 약 20% */
+  height: 20%;
+  min-height: 115px;
   background: linear-gradient(180deg, #67abc0 0%, #5ba0b3 60%, #5296a8 100%);
   border: 2px solid #3d6a77;
   border-radius: 8px;
   box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.28), 0 2px 4px rgba(255, 255, 255, 0.6);
-  padding: 8px 12px;
+  padding: 6px 12px 4px 12px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -101,55 +101,71 @@ html, body {
   font-weight: 700;
   color: var(--lcd-text);
   letter-spacing: -0.5px;
+  z-index: 5;
 }
 
-/* 메인 결과 숫자 줄 */
+/* 메인 큰 줄 (식 / 결과) */
 .result-line-wrap {
   flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   overflow: hidden;
   width: 100%;
+  padding-left: 28px; /* M 배지와 겹침 방지 */
 }
 
 .result-line {
   color: var(--lcd-text);
-  font-size: clamp(2rem, 11vw, 3.6rem);
+  font-size: 68px;
   font-weight: 300;
   letter-spacing: -1px;
   text-align: right;
   white-space: nowrap;
   line-height: 1.1;
-  transition: font-size 0.1s ease;
   user-select: text;
   -webkit-user-select: text;
 }
 
-.result-line.long-text {
-  font-size: clamp(1.4rem, 7vw, 2.2rem);
-}
-
-.result-line.very-long-text {
-  font-size: clamp(1.1rem, 5.2vw, 1.6rem);
-}
-
 .result-line.error-text {
-  font-size: clamp(1.1rem, 5.5vw, 1.8rem);
   color: #7f1d1d;
   font-weight: 500;
 }
 
-/* 디스플레이 하단 정보 줄 */
+/* 작은 줄 (미리 결과 / 직전 식) */
+.sub-expression-wrap {
+  width: 100%;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.sub-expression {
+  width: 100%;
+  font-size: clamp(1.15rem, 4.8vw, 1.45rem);
+  color: rgba(14, 34, 42, 0.85);
+  font-weight: 400;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sub-expression.preview-text {
+  color: rgba(14, 34, 42, 0.55);
+}
+
+/* 디스플레이 하단 정보 줄 (기록 단추, 가운데 손잡이) */
 .display-bottom-bar {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   width: 100%;
-  height: 32px;
-  border-top: 1px solid rgba(61, 106, 119, 0.35);
-  padding-top: 4px;
+  height: 24px;
+  flex-shrink: 0;
 }
 
 /* 계산 기록 단추 */
@@ -160,8 +176,8 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 30px;
+  width: 32px;
+  height: 24px;
   border-radius: 4px;
   cursor: pointer;
   opacity: 0.8;
@@ -178,29 +194,17 @@ html, body {
   background-color: rgba(0, 0, 0, 0.12);
 }
 
-/* 가운데 끌어내림 손잡이 바: 식 길이와 무관하게 항상 중앙 고정 */
+/* 가운데 끌어내림 손잡이 바: 칸 아래 가장자리 가운데에 글 줄과 따로 배치 */
 .drag-handle {
   position: absolute;
   left: 50%;
+  bottom: 2px;
   transform: translateX(-50%);
   width: 44px;
   height: 4px;
   background-color: rgba(14, 34, 42, 0.4);
   border-radius: 2px;
   pointer-events: none;
-}
-
-/* 작은 직전 식 */
-.sub-expression {
-  font-size: clamp(1rem, 4.2vw, 1.4rem);
-  color: rgba(14, 34, 42, 0.75);
-  font-weight: 400;
-  text-align: right;
-  white-space: nowrap;
-  overflow: hidden;
-  max-width: calc(50% - 32px);
-  margin-left: auto;
-  z-index: 1;
 }
 
 /* 단추 그리드 컨테이너 (4열 6행) */

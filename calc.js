@@ -348,6 +348,50 @@ export function createCalculator(initialMemory = 0) {
     return list[0].value;
   }
 
+  function getLiveExpression() {
+    if (error) {
+      return error;
+    }
+    if (isResultState) {
+      return formatNumber(lastResult);
+    }
+    let expr = '';
+    if (tokens.length > 0) {
+      expr = tokens.map(t => t.type === 'op' ? t.value : t.raw).join(' ');
+    }
+    if (currentInput !== '') {
+      let formattedCurrent = formatInputString(currentInput);
+      if (expr.length > 0) {
+        expr += ' ' + formattedCurrent;
+      } else {
+        expr = formattedCurrent;
+      }
+    } else if (expr.length === 0) {
+      expr = '0';
+    }
+    return expr;
+  }
+
+  function getPreview() {
+    if (error || isResultState) return null;
+    if (currentInput === '') return null;
+    if (tokens.length === 0) return null;
+
+    let hasOp = tokens.some(t => t.type === 'op');
+    if (!hasOp) return null;
+
+    try {
+      let currentVal = Decimal.fromString(currentInput);
+      let tempTokens = [...tokens, { type: 'num', value: currentVal, raw: formatNumber(currentVal) }];
+      let res = evaluateTokens(tempTokens);
+      let formatted = formatNumber(res);
+      if (formatted === '숫자가 너무 큽니다') return null;
+      return formatted;
+    } catch (_) {
+      return null;
+    }
+  }
+
   function getState(extra = {}) {
     let display;
     if (error) {
@@ -371,7 +415,9 @@ export function createCalculator(initialMemory = 0) {
       hasMemory: !memory.isZero(),
       error,
       ignored: !!extra.ignored,
-      record: extra.record || null
+      record: extra.record || null,
+      liveExpression: getLiveExpression(),
+      preview: getPreview()
     };
   }
 
